@@ -15,8 +15,6 @@ import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 contract Auction is ERC721Enumerable, Ownable, PaymentSplitter{
    
     uint32 public immutable maxPerWallet;
-    uint32 public immutable amountForTeam;
-    uint32 public immutable amountForAuction;
     uint32 public immutable collectionSize;
     string baseTokenURI;
     
@@ -44,8 +42,6 @@ contract Auction is ERC721Enumerable, Ownable, PaymentSplitter{
     constructor(
         string memory name,
         string memory symbol, 
-        uint32 _amountForTeam, 
-        uint32 _amountforAuction,
         uint32 _maxPerWallet,
         uint32 _collectionSize,
         address[] memory _payees,
@@ -53,8 +49,6 @@ contract Auction is ERC721Enumerable, Ownable, PaymentSplitter{
 
     ) ERC721(name,symbol) PaymentSplitter(_payees, _shares) payable {
         maxPerWallet = _maxPerWallet;
-        amountForTeam = _amountForTeam;
-        amountForAuction = _amountforAuction;
         collectionSize = _collectionSize;
     }
 
@@ -98,14 +92,6 @@ contract Auction is ERC721Enumerable, Ownable, PaymentSplitter{
         saleConfig.auctionSaleStartTime = auctionStartTime;
     }
    
-    function _baseURI() internal view virtual override returns (string memory) {
-        return baseTokenURI;
-    }
-
-    function setBaseURI(string memory baseURI) public onlyOwner {
-        baseTokenURI = baseURI;
-    }
-
     function moneyDue(address account) public  view returns (uint256) {
         return super.releasable(account);
     }
@@ -114,5 +100,21 @@ contract Auction is ERC721Enumerable, Ownable, PaymentSplitter{
     function withdrawMoney(address payable account) public {
         release(account);
     }
+
+
+     function _baseURI() internal view virtual override returns (string memory) {
+        return baseTokenURI;
+    }
+
+    function setBaseURI(string memory baseURI) public onlyOwner {
+        baseTokenURI = baseURI;
+    }
+
+    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    _requireMinted(tokenId);
+
+    return bytes(baseTokenURI).length > 0 ? string(abi.encodePacked(baseTokenURI, Strings.toString(tokenId),".json")) : "";
+}
+
 
 }

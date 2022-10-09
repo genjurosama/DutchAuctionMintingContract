@@ -7,15 +7,28 @@ describe("Auction Smart Contract Tests", function() {
         // This is executed before each test
         const Auction = await ethers.getContractFactory("Auction");
         const [account1,account2] = await ethers.getSigners();
-        auction = await Auction.deploy("Auction", "auction",3,10,20,30,[account1.address, account2.address], [60, 40]);
+        auction = await Auction.deploy("Auction", "auction",20,30,[account1.address, account2.address], [60, 40]);
 
     })
+
+
+    it("shouldn't set base URI as non owner", async function() {
+        try {
+            [account1,account2] = await ethers.getSigners();
+            expect(await auction.balanceOf(account1.address)).to.equal(0);
+            await auction.connect(account2).setBaseURI("ipfs://QmPdoAtcJc9uXtWYLSkerWEpX5fMnsktHP8XajQEPAqdu6/");
+            assert.fail("not the owner")
+        }catch (err) {
+            assert.include(err.message, "VM Exceptio", "The error message should contain 'VM Exceptio'");
+        }
+        
+    })
+
 
     it("try to mint auction before allowed time ", async function() {
             try{
                 const auctionStartTime = new Date();
                 auctionStartTime.setMinutes(auctionStartTime.getMinutes() + 30);
-                console.log('auction start:',auctionStartTime.getTime())
                 const [account1,account2] = await ethers.getSigners();
                 await auction.connect(account1).setAuctionStartTime( Math.floor(auctionStartTime.getTime()/ 1000));
                 await auction.connect(account1).auctionMint(3);
@@ -56,8 +69,6 @@ it("try to mint auction after allowed time and test second step of auction ", as
     await auction.connect(account1).auctionMint(1,{
         value: ethers.utils.parseEther("1.0")});    
     
-    token = await auction.connect(account1).tokenOfOwnerByIndex(account1.address,0);
-    console.log(token)
 
 })
 
@@ -73,8 +84,7 @@ it("try to mint auction after allowed time and test 3rd step of auction ", async
     await auction.connect(account1).auctionMint(1,{
         value: ethers.utils.parseEther("1.0")});    
     
-    token = await auction.connect(account1).tokenOfOwnerByIndex(account1.address,0);
-    console.log(token)
+
 
 })
 
@@ -89,8 +99,7 @@ it("try to mint auction after allowed time and test last step of auction ", asyn
     await auction.connect(account1).auctionMint(1,{
         value: ethers.utils.parseEther("1.0")});    
     
-    token = await auction.connect(account1).tokenOfOwnerByIndex(account1.address,0);
-    console.log(token)
+
 
 })
 
@@ -106,8 +115,6 @@ it("try to mint auction after allowed time and test before last step of auction 
     await auction.connect(account1).auctionMint(1,{
         value: ethers.utils.parseEther("1.0")});    
     
-    token = await auction.connect(account1).tokenOfOwnerByIndex(account1.address,0);
-    console.log(token)
 
 })
 
@@ -122,7 +129,6 @@ it("try to mint over supply ", async function() {
         await auction.connect(account1).auctionMint(50,{
             value: ethers.utils.parseEther("1000")});    
         const totalSupply = await auction.connect(account1).totalSupply();   
-        console.log('total supply:',totalSupply) 
         assert.fail("exceed limit")
     } 
     catch(err) {
