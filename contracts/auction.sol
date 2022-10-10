@@ -4,16 +4,16 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 
-contract Auction is ERC721Enumerable, Ownable, PaymentSplitter{
+contract Auction is ERC721Enumerable, Ownable, PaymentSplitter {
    
+    using Counters for Counters.Counter;
+    Counters.Counter counter;
     uint32 public immutable maxPerWallet;
     uint32 public immutable collectionSize;
     string baseTokenURI;
@@ -63,7 +63,11 @@ contract Auction is ERC721Enumerable, Ownable, PaymentSplitter{
                 "Auction hasn't started yet");
        require( totalSupply() + quantity <= collectionSize,"You exceeded the remaining limit");
        uint256 totalCost = getPrice() * quantity;
-       _safeMint(msg.sender, quantity);
+       for (uint i=0;i< quantity ; i++) {
+            counter.increment();
+            _safeMint(msg.sender, counter.current());
+        }
+       
        refundIfOver(totalCost);
     }
 

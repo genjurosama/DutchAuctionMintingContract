@@ -11,7 +11,6 @@ describe("Auction Smart Contract Tests", function() {
 
     })
 
-
     it("shouldn't set base URI as non owner", async function() {
         try {
             [account1,account2] = await ethers.getSigners();
